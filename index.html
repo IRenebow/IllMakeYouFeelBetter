@@ -35,6 +35,42 @@
     .inv { display:flex; gap:6px; flex-wrap: wrap; }
     .kbd { font: 12px/1.2 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas; background:#0c0f16; border:1px solid #2a3347; border-radius:6px; padding:2px 6px; color:#cbd5e1; }
     .hint { color: var(--muted); font-size: 14px; margin-top: 8px; }
+    .phone {
+      width: min(460px, 96%);
+      margin: 16px auto;
+      background:#0c0f16;
+      border:1px solid #2a3347;
+      border-radius: 20px;
+      box-shadow: 0 12px 36px rgba(0,0,0,.45);
+      overflow: hidden;
+      color:#e6edf3;
+    }
+    .phone .statusbar {
+      padding: 10px 14px;
+      font: 14px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas;
+      color:#94a3b8;
+      border-bottom:1px solid #1f2636;
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    .phone .caller {
+      display:flex; gap:14px; align-items:center; padding:16px;
+    }
+    .phone .caller img {
+      width:56px; height:56px; border-radius:12px; object-fit:cover;
+      border:1px solid #2a3347; background:#111522;
+    }
+    .phone .caller .name { font-weight:700; font-size:18px; }
+    .phone .caller .sub  { color:#94a3b8; font-size:13px; margin-top:2px; }
+    .call-buttons {
+      display:flex; gap:12px; justify-content:center; padding:16px; border-top:1px solid #1f2636;
+    }
+    .btn {
+      display:inline-block; padding:10px 16px; border-radius:999px; text-decoration:none;
+      border:1px solid #2a3347; background:#131a2a; color:#e6edf3; font-weight:600;
+    }
+    .btn.green { background:#0b3; }
+    .btn.red   { background:#b00; }
+    .btn:hover { filter:brightness(1.05); }
   </style>
 </head>
 <body>
@@ -64,11 +100,9 @@
     // Each node has: id, text, links[], (optional) onEnter() side effects/conditions
 
     const state = {
-      hour: 6,
-      minute: 51,
-      flags: new Set(),
-      items: [],
-      current: null,
+      hour: 8,
+      minute: 30,
+      name: 'Irene'
     };
 
     const nodes = {
@@ -76,38 +110,60 @@
       start: {
         id: 'start',
         text: () => {
-          advanceTime(9); // Adds 9 minutes every time you wake and snooze
-          return `Buzzzzz... Your alarm clock vibrates on the nightstand.
-    The glowing digits read ${formatTime(state.hour, state.minute)}.`;
+          return `Buzzzzz... Your alarm clock vibrates on the nightstand. The glowing digits read ${formatTime(state.hour, state.minute)}.`;
         },
         links: [
-          { to: 'stopAlarm', label: 'Turn off the alarm' },
           { to: 'snoozeAlarm', label: 'Hit the snooze button' },
+          { to: 'stopAlarm', label: 'Turn off the alarm' },
           { to: 'ignoreAlarm', label: 'Pull the blanket over your head' },
         ],
       },
     
       // --- Stop alarm -------------------------------------------------------------
-      stopAlarm: {
-        id: 'stopAlarm',
-        text: `You pass out after this majestic effort. 
-    Moments later, your phone begins to ring loudly.`,
-      },
+    stopAlarm: {
+      id: 'stopAlarm',
+      text: () => {
+      state.hour = 12;
+    state.minute = 21;
+      return `<p>You pass out after this majestic effort. Moments later, your phone begins to ring loudly.</p>
+        <div class="phone">
+          <div class="statusbar">
+            <span>${formatTime(state.hour, state.minute)}</span>
+            <span>📶 🔋</span>
+          </div>
+          <div class="caller">
+            <img src="Lily.png" alt="Lily">
+            <div>
+              <div class="name">Lily</div>
+              <div class="sub">Incoming call</div>
+            </div>
+          </div>
+          <div class="call-buttons">
+            <a class="btn green" href="#takeCall">Pick up</a>
+            <a class="btn red"   href="#rejectCall">Hang up</a>
+          </div>
+        </div>
+      `},
+      links: [],
+    },
+
     
       // --- Snooze sequence --------------------------------------------------------
       snoozeAlarm: {
         id: 'snoozeAlarm',
         text: () => {
           advanceTime(9);
-          return `Buzzzzz... Your alarm clock vibrates on the nightstand.
-    The glowing digits read ${formatTime(state.hour, state.minute)}.`;
+          console.log(`DEBUG time ${state.hour}:${state.minute} (cutoff? ${isAtOrAfterHM(state.hour, state.minute, 7, 51)})`);
+          return `Buzzzzz... Your alarm clock vibrates on the nightstand. The glowing digits read ${formatTime(state.hour, state.minute)}.`;
         },
         links: [
-          { to: 'stopAlarm', label: 'Turn off the alarm' },
-          {
-            to: (!isBefore(12, 51) ? 'snoozeAlarmEnd' : 'snoozeAlarm'),
+          { to: () => {
+              const next = peekAdvance(9); // what time it'll be after clicking snooze
+              return isAtOrAfterHM(next.h, next.m, 12, 21) ? 'snoozeAlarmEnd' : 'snoozeAlarm';
+            },
             label: 'Snooze again',
           },
+          { to: 'stopAlarm', label: 'Turn off the alarm' },
           { to: 'ignoreAlarm', label: 'Pull the blanket over your head' },
         ],
       },
@@ -130,8 +186,8 @@
     function formatTime(hour, minute) {
       const padded = minute.toString().padStart(2, '0');
       const suffix = hour >= 12 ? 'PM' : 'AM';
-      const realhour = hour >= 12 ? hour-12 : hour;
-      return `${realhour}:${padded} ${suffix}`;
+      const displayHour = (hour % 12) || 12;
+      return `${displayHour}:${padded} ${suffix}`;
     }
 
     function advanceTime(minutesToAdd) {
@@ -140,12 +196,29 @@
         state.minute -= 60;
         state.hour += 1;
       }
-      if (state.hour > 24) state.hour -= 24; // keep it in 24-hour format
+      if (state.hour >= 24) state.hour -= 24; // keep it in 24-hour format
     }
 
-    function isBefore(h, m) {
-      return state.hour < h || (state.hour === h && state.minute < m);
+    // function isBefore(h, m) {
+    //   return state.hour < h || (state.hour === h && state.minute < m);
+    // }
+
+    // function isAtOrAfter(h, m) {
+    //   return !isBefore(h, m);
+    // }
+
+    function peekAdvance(minutes) {
+      let h = state.hour, m = state.minute;
+      m += minutes;
+      while (m >= 60) { m -= 60; h += 1; }
+      if (h >= 24) h -= 24;
+      return { h, m };
     }
+    
+    function isAtOrAfterHM(h, m, H, M) {
+      return h > H || (h === H && m >= M);
+    }
+
 
     // --- tiny engine ---
     const $ = (id) => document.getElementById(id);
@@ -159,17 +232,18 @@
       if (!n) return;
       state.current = n;
     
-      // compute text
+      // Compute and show text
       const text = (typeof n.text === 'function') ? n.text() : n.text;
-      $('passage').textContent = text;
+      document.getElementById('passage').innerHTML = text;
     
-      // links
-      const links = (n.links || []);
-      $('choices').innerHTML = links
-        .map(link => `<a href="#${link.to}">${link.label}</a>`)
+      // Render links (NOTE: function-valued link.to is evaluated here)
+      const html = (n.links || [])
+        .map(link => {
+          const target = (typeof link.to === 'function') ? link.to() : link.to;
+          return `<a href="#${target}">${link.label}</a>`;
+        })
         .join('<br/>');
-    
-      render();
+      document.getElementById('choices').innerHTML = html;
     }
     
     window.addEventListener('hashchange', () => {
@@ -178,15 +252,15 @@
     });
     
     // Re-render even if clicking the same node (lets snooze on #snoozeAlarm loop)
-    $('choices').addEventListener('click', (e) => {
+    document.getElementById('choices').addEventListener('click', (e) => {
       const a = e.target.closest('a[href^="#"]');
       if (!a) return;
       e.preventDefault();
       const target = a.getAttribute('href').slice(1);
       if (state.current?.id === target) {
-        resolve(target);      // force re-render for same-hash clicks
+        resolve(target);                  // force re-render for same-hash clicks
       } else {
-        location.hash = '#' + target;
+        location.hash = '#' + target;     // normal navigation
       }
     });
     
