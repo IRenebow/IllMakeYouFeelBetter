@@ -40,12 +40,12 @@
 <body>
   <div class="frame">
     <header>
-      <div class="title">Href Game Starter</div>
-      <div class="stats">
+      <div class="title">I'll make you feel better</div>
+      <!-- <div class="stats">
         <span class="badge">Health: <span id="stat-health">3</span></span>
         <span class="badge">Coins: <span id="stat-coins">0</span></span>
         <span class="badge">Room: <span id="stat-room">—</span></span>
-      </div>
+      </div> -->
     </header>
 
     <main>
@@ -96,7 +96,7 @@
                      return `Buzzzzz. It's your alarm clock. The clock reads ${formatTime(state.hour, state.minute)}.`;},
         links: [
           { to: 'stopAlarm', label: 'Stop the alarm' },
-          {to: state.hour === 12 && state.minute >= 51 || state.hour > 12 ? 'snoozeAlarmEnd' : 'snoozeAlarm',label: 'Snooze the alarm'}
+          {to: state.hour === 12 && state.minute >= 51 || state.hour > 12 ? 'snoozeAlarmEnd' : 'snoozeAlarm',label: 'Snooze the alarm'},
           { to: 'ignoreAlarm', label: 'Continue your sleep as the alarm plays on' },
         ],
       },
