@@ -90,9 +90,7 @@
       // --- Stop alarm -------------------------------------------------------------
       stopAlarm: {
         id: 'stopAlarm',
-        text: `You finally silence the alarm. 
-    The room is still, save for the faint hum of the city outside.
-    You stare at the ceiling, half-proud, half-regretful. 
+        text: `You pass out after this majestic effort. 
     Moments later, your phone begins to ring loudly.`,
       },
     
@@ -101,33 +99,29 @@
         id: 'snoozeAlarm',
         text: () => {
           advanceTime(9);
-          return `You smack the snooze button and sink back into your pillow.
-    Minutes melt away... The clock now reads ${formatTime(state.hour, state.minute)}.`;
+          return `Buzzzzz... Your alarm clock vibrates on the nightstand.
+    The glowing digits read ${formatTime(state.hour, state.minute)}.`;
         },
         links: [
-          { to: 'stopAlarm', label: 'Get up this time' },
+          { to: 'stopAlarm', label: 'Turn off the alarm' },
           {
             to: (!isBefore(12, 51) ? 'snoozeAlarmEnd' : 'snoozeAlarm'),
             label: 'Snooze again',
           },
-          { to: 'ignoreAlarm', label: 'Keep pretending to sleep' },
+          { to: 'ignoreAlarm', label: 'Pull the blanket over your head' },
         ],
       },
     
       // --- Ignore alarm -----------------------------------------------------------
       ignoreAlarm: {
         id: 'ignoreAlarm',
-        text: `You let the alarm play on. 
-    Its rhythm fades into your dreams until everything dissolves into silence.
-    When you finally open your eyes, your phone is shrieking beside you.`,
+        text: `Honestly, it's quite naive of your clock to think it can conquer your exhaustion with lovely music. Moments later, your phone begins to ring loudly.`,
       },
     
       // --- End of snooze ----------------------------------------------------------
       snoozeAlarmEnd: {
         id: 'snoozeAlarmEnd',
-        text: () => `The alarm has long stopped, replaced by the relentless buzz of your phone.
-    You’ve slept far past morning — the kind of oversleep that leaves sunlight 
-    pouring across your sheets and a vague sense of panic in your chest.`,
+        text: () => `Moments later, your phone begins to ring loudly.`,
       },
     };
 
