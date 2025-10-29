@@ -84,74 +84,11 @@
       stopAlarm: {
         id: 'stopAlarm',
         text: `You passed out after this majestic act. The next time you wake up is by the ringing of your phone.`,
-        links: [
-          { to: 'takeCall', label: 'Reach for the glint' },
-          { to: 'rejectCall', label: 'Back to the ferryman' },
-        ],
-      },
-      takeCoin: {
-        id: 'takeCoin',
-        text: () => {
-          if (!state.flags.has('foundCoin')) {
-            state.flags.add('foundCoin');
-            state.coins += 1;
-            addItem('Salt‑kissed Coin');
-            return 'You pry out a tarnished coin. The sea sighs. (+1 coin)';
-          }
-          return 'Just splinters and seaweed now.';
-        },
-        links: [ { to: 'dock', label: 'Back' } ],
-      },
-      ferry: {
-        id: 'ferry',
-        text: () => {
-          state.coins -= 1; addItem('Ferry Stub');
-          return 'You pay the ferryman. "North shoals," he nods. The skiff cuts the fog…';
-        },
-        links: [ { to: 'shoals', label: 'Arrive at the shoals' } ],
-      },
-      market: {
-        id: 'market',
-        text: 'Stalls bustle. A vendor offers bread for 1 coin. A map is 2 coins.',
-        links: [
-          { to: 'buyBread', label: 'Buy bread (1 coin)', if: () => state.coins >= 1 },
-          { to: 'buyMap', label: 'Buy map (2 coins)', if: () => state.coins >= 2 },
-          { to: 'start', label: 'Return to the pier' },
-        ],
-      },
-      buyBread: {
-        id: 'buyBread',
-        text: () => {
-          state.coins -= 1; state.health = Math.min(5, state.health + 1); addItem('Crusty Bread');
-          return 'Warm bread revives you. (+1 health)';
-        },
-        links: [ { to: 'market', label: 'Back to market' } ],
-      },
-      buyMap: {
-        id: 'buyMap',
-        text: () => {
-          state.coins -= 2; addItem('Hand‑drawn Map'); state.flags.add('hasMap');
-          return 'The map shows a dotted path to the north shoals.';
-        },
-        links: [ { to: 'market', label: 'Back to market' } ],
-      },
-      shoals: {
-        id: 'shoals',
-        text: () => state.flags.has('hasMap')
-          ? 'With the map, you skirt quicksand and reach a weathered beacon.'
-          : 'Without a map, the fog bites. You lose your way and your nerve. (-1 health)',
-        onEnter: () => { if (!state.flags.has('hasMap')) state.health = Math.max(0, state.health - 1); },
-        links: [
-          { to: 'beacon', label: 'Approach the beacon', if: () => state.flags.has('hasMap') },
-          { to: 'start', label: 'Retreat to the pier' },
-        ],
-      },
-      beacon: {
-        id: 'beacon',
-        text: 'At the beacon, a hatch yawns. A soft ticking within… (Demo ends here.)',
-        links: [ { to: 'start', label: 'Restart' } ],
-      },
-    };
+        // links: [
+        //   { to: 'takeCall', label: 'Reach for the glint' },
+        //   { to: 'rejectCall', label: 'Back to the ferryman' },
+        // ],
+      };
 
     // --- tiny engine ---
     const $ = (id) => document.getElementById(id);
