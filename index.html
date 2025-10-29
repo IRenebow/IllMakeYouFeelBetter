@@ -64,8 +64,8 @@
     // Each node has: id, text, links[], (optional) onEnter() side effects/conditions
 
     const state = {
-      hour: 7,
-      minute: 0,
+      hour: 6,
+      minute: 51,
       flags: new Set(),
       items: [],
       current: null,
@@ -74,15 +74,24 @@
     const nodes = {
       start: {
         id: 'start',
-        text: `Buzzzzz. It's your alarm clock. The clock reads 7:00 AM.`,
+        text: () => {advanceTime(9); // adds 9 minutes
+                     return `Buzzzzz. It's your alarm clock. The clock reads ${formatTime(state.hour, state.minute)}.`;},
         links: [
           { to: 'stopAlarm', label: 'Stop the alarm' },
-          { to: 'snooze', label: 'Snooze the alarm'},
-          { to: 'ignore', label: 'Continue your sleep as the alarm plays on' },
+          { to: 'start', label: 'Snooze the alarm'},
+          { to: 'ignoreAlarm', label: 'Continue your sleep as the alarm plays on' },
         ],
       },
       stopAlarm: {
         id: 'stopAlarm',
+        text: `You passed out after this majestic act. The next time you wake up is by the ringing of your phone.`,
+        // links: [
+        //   { to: 'takeCall', label: 'Reach for the glint' },
+        //   { to: 'rejectCall', label: 'Back to the ferryman' },
+        // ],
+      },
+      stopAlarm: {
+        id: 'snoozeAlarm',
         text: `You passed out after this majestic act. The next time you wake up is by the ringing of your phone.`,
         // links: [
         //   { to: 'takeCall', label: 'Reach for the glint' },
@@ -93,60 +102,20 @@
     // --- tiny engine ---
     const $ = (id) => document.getElementById(id);
 
-    function addItem(name){
-      if (!state.items.includes(name)) state.items.push(name);
-      renderInventory();
+    function formatTime(hour, minute) {
+      const padded = minute.toString().padStart(2, '0');
+      const suffix = hour >= 12 ? 'PM' : 'AM';
+      return `${hour}:${padded} ${suffix}`;
     }
 
-    function renderInventory(){
-      const inv = $('inventory');
-      inv.innerHTML = state.items.map(x => `<span class="badge">${x}</span>`).join('');
+    function advanceTime(minutesToAdd) {
+      state.minute += minutesToAdd;
+      while (state.minute >= 60) {
+        state.minute -= 60;
+        state.hour += 1;
+      }
+      if (state.hour > 12) state.hour -= 12; // keep it in 12-hour format
     }
-
-    function renderStats(){
-      $('stat-health').textContent = state.health;
-      $('stat-coins').textContent = state.coins;
-      $('stat-room').textContent = state.current?.id ?? '—';
-    }
-
-    function resolve(node){
-      const n = typeof node === 'string' ? nodes[node] : node;
-      if (!n) return;
-      state.current = n;
-
-      // compute text (allow function or string)
-      const text = typeof n.text === 'function' ? n.text() : n.text;
-      $('passage').textContent = text;
-
-      // side effects on enter
-      if (n.onEnter) n.onEnter();
-
-      // choices
-      const choices = (n.links || []).filter(link => (link.if ? link.if() : true));
-      $('choices').innerHTML = choices
-        .map(link => `<a href="#${link.to}">${link.label}</a>`)
-        .join('<br/>');
-
-      renderStats();
-    }
-
-    // hash routing via <a href="#nodeId">
-    window.addEventListener('hashchange', () => {
-      const id = location.hash.replace('#','') || 'start';
-      if (nodes[id]) resolve(id);
-    });
-
-    // click delegation for choices (so it works even without hashchange)
-    document.getElementById('choices').addEventListener('click', (e) => {
-      const a = e.target.closest('a[href^="#"]');
-      if (!a) return;
-      e.preventDefault();
-      location.hash = a.getAttribute('href');
-    });
-
-    // Boot
-    if (!location.hash) location.hash = '#start';
-    resolve(location.hash.slice(1));
   </script>
 </body>
 </html>
