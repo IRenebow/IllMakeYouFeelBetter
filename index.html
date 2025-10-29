@@ -64,8 +64,8 @@
     // Each node has: id, text, links[], (optional) onEnter() side effects/conditions
 
     const state = {
-      health: 3,
-      coins: 0,
+      hour: 7,
+      minute: 0,
       flags: new Set(),
       items: [],
       current: null,
@@ -76,17 +76,17 @@
         id: 'start',
         text: `Buzzzzz. It's your alarm clock. The clock reads 7:00 AM.`,
         links: [
-          { to: 'dock', label: 'Look over the dock' },
-          { to: 'ferry', label: 'Ask about the ferry', if: () => state.coins >= 1 },
-          { to: 'market', label: 'Head to the seaside market' },
+          { to: 'stopAlarm', label: 'Stop the alarm' },
+          { to: 'snooze', label: 'Snooze the alarm'},
+          { to: 'ignore', label: 'Continue your sleep as the alarm plays on' },
         ],
       },
-      dock: {
-        id: 'dock',
-        text: `Ropes. Tar. A glint between planks—could be a coin.`,
+      stopAlarm: {
+        id: 'stopAlarm',
+        text: `You passed out after this majestic act. The next time you wake up is by the ringing of your phone.`,
         links: [
-          { to: 'takeCoin', label: 'Reach for the glint' },
-          { to: 'start', label: 'Back to the ferryman' },
+          { to: 'takeCall', label: 'Reach for the glint' },
+          { to: 'rejectCall', label: 'Back to the ferryman' },
         ],
       },
       takeCoin: {
