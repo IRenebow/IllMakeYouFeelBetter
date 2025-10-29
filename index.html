@@ -78,24 +78,43 @@
                      return `Buzzzzz. It's your alarm clock. The clock reads ${formatTime(state.hour, state.minute)}.`;},
         links: [
           { to: 'stopAlarm', label: 'Stop the alarm' },
-          { to: 'start', label: 'Snooze the alarm'},
+          { to: 'snoozeAlarm', label: 'Snooze the alarm'},
           { to: 'ignoreAlarm', label: 'Continue your sleep as the alarm plays on' },
         ],
       },
       stopAlarm: {
         id: 'stopAlarm',
-        text: `You passed out after this majestic act. The next time you wake up is by the ringing of your phone.`,
+        text: `You passed out after this majestic act. The next time you wake up your phone is ringing loudly.`,
         // links: [
         //   { to: 'takeCall', label: 'Reach for the glint' },
         //   { to: 'rejectCall', label: 'Back to the ferryman' },
         // ],
       },
-      stopAlarm: {
+      snoozeAlarm: {
         id: 'snoozeAlarm',
-        text: `You passed out after this majestic act. The next time you wake up is by the ringing of your phone.`,
+        text: () => {advanceTime(9); // adds 9 minutes
+                     return `Buzzzzz. It's your alarm clock. The clock reads ${formatTime(state.hour, state.minute)}.`;},
+        links: [
+          { to: 'stopAlarm', label: 'Stop the alarm' },
+          {to: state.hour === 12 && state.minute >= 51 || state.hour > 12 ? 'snoozeAlarmEnd' : 'snoozeAlarm',label: 'Snooze the alarm'}
+          { to: 'ignoreAlarm', label: 'Continue your sleep as the alarm plays on' },
+        ],
+      },
+    ignoreAlarm: {
+        id: 'ignoreAlarm',
+        text: `Honestly, it's quite naive of your clock to think it can conquer you with this lovely music. The next time you wake up your phone is ringing loudly.`,
         // links: [
         //   { to: 'takeCall', label: 'Reach for the glint' },
         //   { to: 'rejectCall', label: 'Back to the ferryman' },
+        // ],
+      },
+      snoozeAlarmEnd: {
+        id: 'snoozeAlarmEnd',
+        text: () => `The next time you wake up your phone is ringing loudly.`,
+        // links: [
+        //   { to: 'stopAlarm', label: 'Stop the alarm' },
+        //   {to: state.hour === 12 && state.minute >= 51 || state.hour > 12 ? 'snoozeAlarmEnd' : 'snoozeAlarm',label: 'Snooze the alarm'}
+        //   { to: 'ignoreAlarm', label: 'Continue your sleep as the alarm plays on' },
         // ],
       };
 
@@ -105,7 +124,8 @@
     function formatTime(hour, minute) {
       const padded = minute.toString().padStart(2, '0');
       const suffix = hour >= 12 ? 'PM' : 'AM';
-      return `${hour}:${padded} ${suffix}`;
+      const realhour = hour >= 12 ? hour-12 : hour;
+      return `${realhour}:${padded} ${suffix}`;
     }
 
     function advanceTime(minutesToAdd) {
@@ -114,7 +134,7 @@
         state.minute -= 60;
         state.hour += 1;
       }
-      if (state.hour > 12) state.hour -= 12; // keep it in 12-hour format
+      if (state.hour > 24) state.hour -= 24; // keep it in 12-hour format
     }
   </script>
 </body>
