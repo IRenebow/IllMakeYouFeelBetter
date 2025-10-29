@@ -51,7 +51,7 @@
     <main>
       <div id="passage" class="passage"></div>
       <nav id="choices" class="choices"></nav>
-      <div class="hint">Tip: You can link directly to a node, e.g. <span class="kbd">#dock</span> or <span class="kbd">#market</span>.</div>
+      <!-- <div class="hint">Tip: You can link directly to a node, e.g. <span class="kbd">#dock</span> or <span class="kbd">#market</span>.</div> -->
     </main>
 
     <footer>
@@ -72,55 +72,67 @@
     };
 
     const nodes = {
+      // --- Starting node ----------------------------------------------------------
       start: {
         id: 'start',
-        text: () => {advanceTime(9); // adds 9 minutes
-                     return `Buzzzzz. It's your alarm clock. The clock reads ${formatTime(state.hour, state.minute)}.`;},
+        text: () => {
+          advanceTime(9); // Adds 9 minutes every time you wake and snooze
+          return `Buzzzzz... Your alarm clock vibrates on the nightstand.
+    The glowing digits read ${formatTime(state.hour, state.minute)}.`;
+        },
         links: [
-          { to: 'stopAlarm', label: 'Stop the alarm' },
-          { to: 'snoozeAlarm', label: 'Snooze the alarm'},
-          { to: 'ignoreAlarm', label: 'Continue your sleep as the alarm plays on' },
+          { to: 'stopAlarm', label: 'Turn off the alarm' },
+          { to: 'snoozeAlarm', label: 'Hit the snooze button' },
+          { to: 'ignoreAlarm', label: 'Pull the blanket over your head' },
         ],
       },
+    
+      // --- Stop alarm -------------------------------------------------------------
       stopAlarm: {
         id: 'stopAlarm',
-        text: `You passed out after this majestic act. The next time you wake up your phone is ringing loudly.`,
-        // links: [
-        //   { to: 'takeCall', label: 'Reach for the glint' },
-        //   { to: 'rejectCall', label: 'Back to the ferryman' },
-        // ],
+        text: `You finally silence the alarm. 
+    The room is still, save for the faint hum of the city outside.
+    You stare at the ceiling, half-proud, half-regretful. 
+    Moments later, your phone begins to ring loudly.`,
       },
+    
+      // --- Snooze sequence --------------------------------------------------------
       snoozeAlarm: {
         id: 'snoozeAlarm',
-        text: () => {advanceTime(9); // adds 9 minutes
-                     return `Buzzzzz. It's your alarm clock. The clock reads ${formatTime(state.hour, state.minute)}.`;},
+        text: () => {
+          advanceTime(9);
+          return `You smack the snooze button and sink back into your pillow.
+    Minutes melt away... The clock now reads ${formatTime(state.hour, state.minute)}.`;
+        },
         links: [
-          { to: 'stopAlarm', label: 'Stop the alarm' },
-          {to: state.hour === 12 && state.minute >= 51 || state.hour > 12 ? 'snoozeAlarmEnd' : 'snoozeAlarm',label: 'Snooze the alarm'},
-          { to: 'ignoreAlarm', label: 'Continue your sleep as the alarm plays on' },
+          { to: 'stopAlarm', label: 'Get up this time' },
+          {
+            to: (!isBefore(12, 51) ? 'snoozeAlarmEnd' : 'snoozeAlarm'),
+            label: 'Snooze again',
+          },
+          { to: 'ignoreAlarm', label: 'Keep pretending to sleep' },
         ],
       },
-    ignoreAlarm: {
+    
+      // --- Ignore alarm -----------------------------------------------------------
+      ignoreAlarm: {
         id: 'ignoreAlarm',
-        text: `Honestly, it's quite naive of your clock to think it can conquer you with this lovely music. The next time you wake up your phone is ringing loudly.`,
-        // links: [
-        //   { to: 'takeCall', label: 'Reach for the glint' },
-        //   { to: 'rejectCall', label: 'Back to the ferryman' },
-        // ],
+        text: `You let the alarm play on. 
+    Its rhythm fades into your dreams until everything dissolves into silence.
+    When you finally open your eyes, your phone is shrieking beside you.`,
       },
+    
+      // --- End of snooze ----------------------------------------------------------
       snoozeAlarmEnd: {
         id: 'snoozeAlarmEnd',
-        text: () => `The next time you wake up your phone is ringing loudly.`,
-        // links: [
-        //   { to: 'stopAlarm', label: 'Stop the alarm' },
-        //   {to: state.hour === 12 && state.minute >= 51 || state.hour > 12 ? 'snoozeAlarmEnd' : 'snoozeAlarm',label: 'Snooze the alarm'}
-        //   { to: 'ignoreAlarm', label: 'Continue your sleep as the alarm plays on' },
-        // ],
-      };
+        text: () => `The alarm has long stopped, replaced by the relentless buzz of your phone.
+    You’ve slept far past morning — the kind of oversleep that leaves sunlight 
+    pouring across your sheets and a vague sense of panic in your chest.`,
+      },
+    };
 
-    // --- tiny engine ---
-    const $ = (id) => document.getElementById(id);
 
+    // --- helper functions ---
     function formatTime(hour, minute) {
       const padded = minute.toString().padStart(2, '0');
       const suffix = hour >= 12 ? 'PM' : 'AM';
@@ -134,8 +146,60 @@
         state.minute -= 60;
         state.hour += 1;
       }
-      if (state.hour > 24) state.hour -= 24; // keep it in 12-hour format
+      if (state.hour > 24) state.hour -= 24; // keep it in 24-hour format
     }
+
+    function isBefore(h, m) {
+      return state.hour < h || (state.hour === h && state.minute < m);
+    }
+
+    // --- tiny engine ---
+    const $ = (id) => document.getElementById(id);
+
+    function render() {
+      // optional: update header badges if you’re showing any
+    }
+    
+    function resolve(nodeId) {
+      const n = nodes[nodeId];
+      if (!n) return;
+      state.current = n;
+    
+      // compute text
+      const text = (typeof n.text === 'function') ? n.text() : n.text;
+      $('passage').textContent = text;
+    
+      // links
+      const links = (n.links || []);
+      $('choices').innerHTML = links
+        .map(link => `<a href="#${link.to}">${link.label}</a>`)
+        .join('<br/>');
+    
+      render();
+    }
+    
+    window.addEventListener('hashchange', () => {
+      const id = location.hash.slice(1) || 'start';
+      resolve(id);
+    });
+    
+    // Re-render even if clicking the same node (lets snooze on #snoozeAlarm loop)
+    $('choices').addEventListener('click', (e) => {
+      const a = e.target.closest('a[href^="#"]');
+      if (!a) return;
+      e.preventDefault();
+      const target = a.getAttribute('href').slice(1);
+      if (state.current?.id === target) {
+        resolve(target);      // force re-render for same-hash clicks
+      } else {
+        location.hash = '#' + target;
+      }
+    });
+    
+    // Boot
+    if (!location.hash) location.hash = '#start';
+    resolve(location.hash.slice(1));
+
   </script>
 </body>
 </html>
