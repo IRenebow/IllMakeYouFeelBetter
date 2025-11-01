@@ -76,7 +76,7 @@
 <body>
   <div class="frame">
     <header>
-      <div class="title">I'll make you feel better</div>
+      <div class="title">I'm not giving up on you</div>
       <!-- <div class="stats">
         <span class="badge">Health: <span id="stat-health">3</span></span>
         <span class="badge">Coins: <span id="stat-coins">0</span></span>
@@ -100,7 +100,7 @@
     // Each node has: id, text, links[], (optional) onEnter() side effects/conditions
 
     const state = {
-      hour: 8,
+      hour: 10,
       minute: 30,
       name: 'Irene'
     };
@@ -147,18 +147,54 @@
       links: [],
     },
 
+    takeCall: {
+      id: 'takeCall',
+      text: `
+      You swipe to answer. "Dude WHAT THE HELL! You're supposed to be meeting me in the cafe 2 hours ago."
+      "I'm sorry. I just need to focus on self-care today..."
+      "You know I'm starting to grow sick of your therapy talk. I know you've been through a lot and I know we've always been best friends, but with this kind of disrespect I don't think I want to be friends with you anymore! Maybe I need to focus on MY self-care you know!"
+      She hangs up. You sit in the dark in silence. You know you have to do something to salvage this mess. But you just don't have the energy for that.
+      ...
+      What a mess...`,
+    links: [],
+    },
+        
+    rejectCall: {
+      id: 'rejectCall',
+      text: `<p>You are too exhausted to answer the phone. But Lily won't </p>
+        <div class="phone">
+          <div class="statusbar">
+            <span>${formatTime(state.hour, state.minute)}</span>
+            <span>📶 🔋</span>
+          </div>
+          <div class="caller">
+            <img src="Lily.png" alt="Lily">
+            <div>
+              <div class="name">Lily</div>
+              <div class="sub">Incoming call</div>
+            </div>
+          </div>
+          <div class="call-buttons">
+            <a class="btn green" href="#takeCall">Pick up</a>
+            <a class="btn red"   href="#rejectCall">Hang up</a>
+          </div>
+        </div>
+      `,
+    links: [],
+    },
+
     
       // --- Snooze sequence --------------------------------------------------------
       snoozeAlarm: {
         id: 'snoozeAlarm',
         text: () => {
-          advanceTime(9);
+          advanceTime(30);
           console.log(`DEBUG time ${state.hour}:${state.minute} (cutoff? ${isAtOrAfterHM(state.hour, state.minute, 7, 51)})`);
-          return `Buzzzzz... Your alarm clock vibrates on the nightstand. The glowing digits read ${formatTime(state.hour, state.minute)}.`;
+          return `Buzzzzz... Your alarm clock vibrates on the nightstand. The glowing digits read ${formatTime(state.hour, state.minute)}.`
         },
         links: [
           { to: () => {
-              const next = peekAdvance(9); // what time it'll be after clicking snooze
+              const next = peekAdvance(30); // what time it'll be after clicking snooze
               return isAtOrAfterHM(next.h, next.m, 12, 21) ? 'snoozeAlarmEnd' : 'snoozeAlarm';
             },
             label: 'Snooze again',
@@ -171,14 +207,81 @@
       // --- Ignore alarm -----------------------------------------------------------
       ignoreAlarm: {
         id: 'ignoreAlarm',
-        text: `Honestly, it's quite naive of your clock to think it can conquer your exhaustion with lovely music. Moments later, your phone begins to ring loudly.`,
+        text: () => {
+      state.hour = 12;
+    state.minute = 21;
+      return `<p>Honestly, it's quite naive of your clock to think it can conquer your exhaustion with lovely music. Moments later, your phone begins to ring loudly.</p>
+        <div class="phone">
+          <div class="statusbar">
+            <span>${formatTime(state.hour, state.minute)}</span>
+            <span>📶 🔋</span>
+          </div>
+          <div class="caller">
+            <img src="Lily.png" alt="Lily">
+            <div>
+              <div class="name">Lily</div>
+              <div class="sub">Incoming call</div>
+            </div>
+          </div>
+          <div class="call-buttons">
+            <a class="btn green" href="#takeCall">Pick up</a>
+            <a class="btn red"   href="#rejectCall">Hang up</a>
+          </div>
+        </div>
+      `},
+        links: [],
       },
     
       // --- End of snooze ----------------------------------------------------------
       snoozeAlarmEnd: {
         id: 'snoozeAlarmEnd',
-        text: () => `Moments later, your phone begins to ring loudly.`,
+        text: () => {
+      state.hour = 12;
+    state.minute = 21;
+      return `<p>Moments later, your phone begins to ring loudly.</p>
+        <div class="phone">
+          <div class="statusbar">
+            <span>${formatTime(state.hour, state.minute)}</span>
+            <span>📶 🔋</span>
+          </div>
+          <div class="caller">
+            <img src="Lily.png" alt="Lily">
+            <div>
+              <div class="name">Lily</div>
+              <div class="sub">Incoming call</div>
+            </div>
+          </div>
+          <div class="call-buttons">
+            <a class="btn green" href="#takeCall">Pick up</a>
+            <a class="btn red"   href="#rejectCall">Hang up</a>
+          </div>
+        </div>
+      `},
+        links: [],
       },
+
+    unknownCaller: {
+      id: 'unknownCaller',
+      text: () => `
+        <div class="phone">
+          <div class="statusbar"><span>${formatTime(state.hour, state.minute)}</span><span>📶 🔋</span></div>
+          <div class="caller">
+            <img src="./unknown.jpeg" alt="Unknown" style="filter: grayscale(100%);">
+            <div>
+              <div class="name">Unknown Caller</div>
+              <div class="sub">Incoming call</div>
+            </div>
+          </div>
+          <div class="call-buttons">
+            <a class="btn green" href="#takeCall">Answer</a>
+            <a class="btn red"   href="#rejectCall">Decline</a>
+          </div>
+        </div>
+      `,
+      links: [],
+    },
+
+        
     };
 
 
@@ -219,6 +322,17 @@
       return h > H || (h === H && m >= M);
     }
 
+    function enableClickToContinue(nextId) {
+      const el = document.getElementById('passage');
+      el.style.cursor = 'pointer';
+      el.title = 'Click to continue';
+      el.addEventListener('click', () => {
+        el.style.cursor = 'auto';
+        location.hash = '#' + nextId;
+      }, { once: true }); // ensure it only fires once
+    }
+
+
 
     // --- tiny engine ---
     const $ = (id) => document.getElementById(id);
@@ -244,6 +358,10 @@
         })
         .join('<br/>');
       document.getElementById('choices').innerHTML = html;
+
+    if (n.id === 'takeCall') {
+        enableClickToContinue('unknownCaller');
+      }
     }
     
     window.addEventListener('hashchange', () => {
